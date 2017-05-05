@@ -49,13 +49,17 @@ echo GridView::widget([
         'serverIp',
         [
             'attribute' => 'status',
+            'format' => 'html',
             'value' => function($model){
-                if($model->status==1){
-                    return 'up';
-                }
-                else{
-                    return 'down';
-                }
+                return $model->status == 1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>';
+            },
+            'filter' => $status,
+        ],
+        [
+            'attribute' => 'streamingStatus',
+            'format' => 'html',
+            'value' => function($model){
+                return $model->streamingStatus == 1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>';
             },
             'filter' => $status,
         ],

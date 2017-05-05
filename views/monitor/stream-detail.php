@@ -76,7 +76,10 @@ $operation='
                                 'format' => 'html',
                                 'value' => $model->sourceStatus == 1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>'
                             ],
-                            'latestDisconnectedTime',
+                            [
+                                'attribute' => 'latestDisconnectedTime',
+                                'value' => Timezone::date($model->latestDisconnectedTime),
+                            ],
                             [
                                 'label' => 'Source',
                                 'format' => 'html',

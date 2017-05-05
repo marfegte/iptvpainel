@@ -11,7 +11,7 @@ class ServerSearch extends Server{
      */
     public function rules(){
         return [
-            [['serverName', 'serverIp', 'status', 'operatingSystem'], 'safe']
+            [['serverName', 'serverIp', 'status', 'streamingStatus', 'operatingSystem'], 'safe']
         ];
     }
     /**
@@ -43,6 +43,7 @@ class ServerSearch extends Server{
         $query->andFilterWhere(['like', 'serverName', $this->serverName])
         ->andFilterWhere(['like', 'serverIp', $this->serverIp])
         ->andFilterWhere(['=', 'status', $this->status])
+        ->andFilterWhere(['=', 'streamingStatus', $this->streamingStatus])
         ->andFilterWhere(['like', 'operatingSystem', $this->operatingSystem]);
         
         return $dataProvider;

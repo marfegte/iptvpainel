@@ -18,6 +18,8 @@ $status = [
 
 <?= $form->field($model, 'status')->dropDownList($status) ?>
 
+<?= $form->field($model, 'streamingStatus')->dropDownList($status) ?>
+
 <?= $form->field($model, 'operatingSystem')->textInput() ?>
 
 <div class="form-group">

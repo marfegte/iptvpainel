@@ -79,6 +79,11 @@ $request = Yii::$app->request;
                         },
                         'attributes' => [
                             [
+                                'label' => 'IPTVStreaming',
+                                'format' => 'html',
+                                'value' => $model->status===1 ? ($model->streamingStatus===1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>') : '<i class="fa fa-circle" style="color:#f0ad4e;"></i>',
+                            ],
+                            [
                                 'label' => 'Live Streams Status',
                                 'format' => 'html',
                                 'value' => '<span>'.$model->liveStreamsCount.' of '.$model->streamsCount.' Active</span>&nbsp;&nbsp;
@@ -95,14 +100,14 @@ $request = Yii::$app->request;
                             [
                                 'label' => 'Nginx Status',
                                 'format' => 'html',
-                                'value' => '<span>'.($model->nginx->status===1?'UP':'DOWN').'</span>&nbsp;&nbsp;
+                                'value' => '<span>'.($model->status===1 ? ($model->nginx->status===1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>') : '<i class="fa fa-circle" style="color:#f0ad4e;"></i>').'</span>&nbsp;&nbsp;
                                 <a href="'.Url::to(['monitor/nginx-chart', 'serverName'=>$request->get('serverName')]).
                                 '">View Details</a>',
                             ],
                             [
                                 'label' => 'MySQL Status',
                                 'format' => 'html',
-                                'value' => '<span>'.($model->mysql->status===1?'UP':'DOWN').'</span>&nbsp;&nbsp;
+                                'value' => '<span>'.($model->status===1 ? ($model->mysql->status===1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>') : '<i class="fa fa-circle" style="color:#f0ad4e;"></i>').'</span>&nbsp;&nbsp;
                                 <a href="'.Url::to(['monitor/mysql-chart', 'serverName'=>$request->get('serverName')]).
                                 '">View Details</a>',
                             ]

@@ -23,6 +23,10 @@ class ComposerStaticInite7bbc9e18f4d13c4675486b0c8f56260
             'yii\\bootstrap\\' => 14,
             'yii\\' => 4,
         ),
+        'w' => 
+        array (
+            'wbraganca\\' => 10,
+        ),
         'm' => 
         array (
             'miloschuman\\highcharts\\' => 23,
@@ -74,6 +78,10 @@ class ComposerStaticInite7bbc9e18f4d13c4675486b0c8f56260
         'yii\\' => 
         array (
             0 => __DIR__ . '/..' . '/yiisoft/yii2',
+        ),
+        'wbraganca\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/wbraganca/yii2-videojs-widget',
         ),
         'miloschuman\\highcharts\\' => 
         array (

@@ -13,18 +13,54 @@ $status = [
 ];
 
 ?>
-
-<?=Html::dropDownList('serverName', $model, $servers, ['id'=>'server-servername','class' => 'form-control','style'=>'width:100px;float:left']);?>
+<?=Html::dropDownList('serverName', $server, $servers, ['id'=>'server-servername','class' => 'form-control','style'=>'width:100px;float:left']);?>
 &nbsp;&nbsp;&nbsp;
-<?= Html::a('Start IPTV Streaming', ['start-streaming', 'serverName'=>$serverName], 
-    ['class' => 'btn btn-success']) ?>
-    &nbsp;&nbsp;&nbsp;
-<?= Html::a('Stop IPTV Streaming', ['stop-streaming', 'serverName'=>$serverName], 
-    ['class' => 'btn btn-danger']) ?>
-    &nbsp;&nbsp;&nbsp;
-<?= Html::a('Restart IPTV Streaming', ['restart-streaming', 'serverName'=>$serverName], 
-    ['class' => 'btn btn-warning']) ?>
-<br/><br/>
+<span class="label label-info" style="font-size: 120%;">Server:</span> 
+<?php 
+   if($server->status === 1){
+       echo '<i class="fa fa-circle" style="color:#5cb85c;"></i>'; 
+   }else{
+       echo '<i class="fa fa-circle" style="color:#d9534f;"></i>';
+   }
+?>
+<hr />
+<span class="label label-info" style="font-size: 120%;">IPTVStreaming:</span> 
+<?php
+   if($server->status === 1){
+       if($server->streamingStatus === 1){
+           echo '<i class="fa fa-circle" style="color:#5cb85c;"></i>';
+       }else{
+           echo '<i class="fa fa-circle" style="color:#d9534f;"></i>';
+       }
+   }else{
+       echo '<i class="fa fa-circle" style="color:#f0ad4e;"></i>';
+   }
+?>
+&nbsp;&nbsp;&nbsp;
+<?php
+     if($server->status === 1){
+         if($server->streamingStatus === 1){
+             echo Html::a('Start IPTV Streaming', [''], ['class' => 'btn btn-success control', 'disabled' => 'disabled']);
+             echo "&nbsp;&nbsp;&nbsp";
+             echo Html::a('Stop IPTV Streaming', ['stop-streaming', 'serverName'=>$server->serverName], ['class' => 'btn btn-danger control']);
+             echo "&nbsp;&nbsp;&nbsp";
+             echo Html::a('Restart IPTV Streaming', ['restart-streaming', 'serverName'=>$server->serverName], ['class' => 'btn btn-warning control']);
+         }else{
+             echo Html::a('Start IPTV Streaming', ['start-streaming', 'serverName'=>$server->serverName], ['class' => 'btn btn-success control']);
+             echo "&nbsp;&nbsp;&nbsp";
+             echo Html::a('Stop IPTV Streaming', [''], ['class' => 'btn btn-danger control', 'disabled' => 'disabled']);
+             echo "&nbsp;&nbsp;&nbsp";
+             echo Html::a('Restart IPTV Streaming', [''], ['class' => 'btn btn-warning control', 'disabled' => 'disabled']);
+         }
+     }else{
+         echo Html::a('Start IPTV Streaming', [''], ['class' => 'btn btn-success control', 'disabled' => 'disabled']);
+         echo "&nbsp;&nbsp;&nbsp";
+         echo Html::a('Stop IPTV Streaming', [''], ['class' => 'btn btn-danger control', 'disabled' => 'disabled']);
+         echo "&nbsp;&nbsp;&nbsp";
+         echo Html::a('Restart IPTV Streaming', [''], ['class' => 'btn btn-warning control', 'disabled' => 'disabled']);
+     }
+?>
+<hr />
 <?= Html::a('Generate Comparation Chart', '#', 
     ['class' => 'btn btn-success',
         'id' => 'create',
@@ -32,7 +68,6 @@ $status = [
         'data-target' => '#create-modal'
 ]) ?>
 &nbsp;&nbsp;&nbsp;
-<span>Status:</span>
 <span class="label label-success">UP</span>
 <span class="label label-warning">UNKNOWN</span>
 <span class="label label-danger">DOWN</span>
@@ -40,11 +75,11 @@ $status = [
 
 Modal::begin([
     'id' => 'create-modal',
-    'header' => '<h4 class="modal-title">Please select streams on '.$model->serverName.'</h4>',
+    'header' => '<h4 class="modal-title">Please select streams on '.$server->serverName.'</h4>',
 ]);
 ?>
     <?php $form = ActiveForm::begin(); ?>
-        <?= $form->field($model, 'streams', ['template' => 
+        <?= $form->field($server, 'streams', ['template' => 
             '{label}
             <div class="checkgroup">
                 <input type="checkbox" class="all" Name="CheckAll"><label for="all" class="label-all">Check All</label><br/>
@@ -251,6 +286,11 @@ if($result!==null && $description!==null){
 
 <?php 
 $this->registerJs("
+    $(document).on('click', '.control', function(){
+        if($(this).attr('disabled')){
+            return false;
+        }
+    });
     function changeProcessColor(\$selector,value){
         if(value>=0 && value<=30){
             \$selector.removeClass('progress-bar-warning');
@@ -275,17 +315,17 @@ $this->registerJs("
             
             $(\$tds[i]).click(function(){
                 var streamName = $(this).siblings().eq(2).html();
-                window.location.href='index.php?r=monitor/streams&streams='+streamName+'&serverName=$serverName';
+                window.location.href='index.php?r=monitor/streams&streams='+streamName+'&serverName=" . $server->serverName . "';
             });
             $(\$tds[i+1]).click(function(){
                 var streamName = $(this).siblings().eq(2).html();
-                window.location.href='index.php?r=monitor/streams&streams='+streamName+'&serverName=$serverName';
+                window.location.href='index.php?r=monitor/streams&streams='+streamName+'&serverName=" . $server->serverName . "';
             });
         }
     }
     var updateStream = function(streamName, k){
         var \$process = $('.progress .progress-bar');
-        var serverName = '$serverName';
+        var serverName = '". $server->serverName . "';
             $.get('index.php?r=monitor/update-stream-grid-info&serverName='+serverName+'&streamName='+streamName,function(data,status){
                 changeProcessColor($(\$process[k]),data.cpuInfo);
                 $(\$process[k]).css('width',data.cpuInfo+'%');

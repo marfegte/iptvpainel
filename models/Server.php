@@ -3,7 +3,6 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
 use yii\web\NotFoundHttpException;
 class Server extends ActiveRecord{
     public $importFile;
@@ -44,7 +43,7 @@ class Server extends ActiveRecord{
      */
     public function rules(){
         return [
-            [['serverName', 'serverIp', 'status', 'operatingSystem', 'servers', 'streams'], 'required'],
+            [['serverName', 'serverIp', 'status', 'streamingStatus', 'operatingSystem', 'servers', 'streams'], 'required'],
             ['importFile', 'file', 'skipOnEmpty' => false, 'mimeTypes' => ['application/xml', 'text/xml'], 'extensions' => ['xml'], 'maxSize' => 50*1024*1024],
             ['serverName', 'trim'],
             ['serverName', 'string', 'length' => [1, 20]],
@@ -59,7 +58,7 @@ class Server extends ActiveRecord{
      */
     public function scenarios(){
         return [
-            self::SCENARIO_SAVE => ['serverName', 'serverIp', 'status', 'operatingSystem'],
+            self::SCENARIO_SAVE => ['serverName', 'serverIp', 'status', 'streamingStatus', 'operatingSystem'],
             self::SCENARIO_IMPORT => ['importFile'],
             self::SCENARIO_CHANGE_STATUS => ['status'],
             self::SCENARIO_SELECT_SERVERS => ['servers'],

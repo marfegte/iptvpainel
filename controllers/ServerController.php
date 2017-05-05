@@ -122,8 +122,7 @@ class ServerController extends Controller{
                         . '&nbsp;&nbsp;&lt;Server&gt;</br>'
                         . '&nbsp;&nbsp;&nbsp;&nbsp;&lt;serverName&gt;server2&lt;/serverName&gt;</br>'
                         . '&nbsp;&nbsp;&nbsp;&nbsp;&lt;serverIp&gt;1.1.1.1&lt;/serverIp&gt;</br>'
-                        . '&nbsp;&nbsp;&nbsp;&nbsp;&lt;status&gt;1&lt;/status&gt;</br>'
-                        . '&nbsp;&nbsp;&nbsp;&nbsp;&lt;operatingSystem&gt;1&lt;/operatingSystem&gt;</br>'
+                        . '&nbsp;&nbsp;&nbsp;&nbsp;&lt;operatingSystem&gt;CentOS&lt;/operatingSystem&gt;</br>'
                         . '&nbsp;&nbsp;&lt;/Server&gt;</br>'
                         . '&nbsp;&nbsp;&lt;Server&gt;</br>'
                         . '&nbsp;&nbsp;&nbsp;&nbsp;······</br>'
@@ -139,7 +138,7 @@ class ServerController extends Controller{
             try {
                 $xmlArray = simplexml_load_file($model->importFile->tempName);
                 $servers = json_decode(json_encode($xmlArray), true);
-                $columns = ['serverName', 'serverIp', 'status', 'operatingSystem', 'createTime', 'updateTime'];
+                $columns = ['serverName', 'serverIp', 'status', 'streamingStatus', 'operatingSystem', 'createTime', 'updateTime'];
                 $allServers = null;
                 if(ArrayHelper::isIndexed($servers['Server'])){
                     $allServers = $servers['Server'];
@@ -148,7 +147,7 @@ class ServerController extends Controller{
                 }
                 $rows = ArrayHelper::getColumn($allServers, function($element){
                     $now = time();
-                    return [$element['serverName'], $element['serverIp'], $element['status'], $element['operatingSystem'], $now, $now];
+                    return [$element['serverName'], $element['serverIp'], 0, 0, $element['operatingSystem'], $now, $now];
                 });
                     $db = Yii::$app->db;
                     $db->createCommand()->batchInsert('server', $columns, $rows)->execute();

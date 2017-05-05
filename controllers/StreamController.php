@@ -84,9 +84,13 @@ class StreamController extends Controller{
     public function actionCreate(){
         $model = new Stream();
         $model->scenario = Stream::SCENARIO_SAVE;
-        if($model->load(Yii::$app->request->post()) && $model->save()){
-            Yii::info("create a stream named $model->streamName on the server $model->server", 'stream');
-            $this->redirect(['view', 'streamName' => $model->streamName, 'server' => $model->server]);
+        if($model->load(Yii::$app->request->post())){
+            $model->status = 0;
+            $model->sourceStatus = 1;
+            if($model->save()){
+                Yii::info("create a stream named $model->streamName on the server $model->server", 'stream');
+                $this->redirect(['view', 'streamName' => $model->streamName, 'server' => $model->server]);
+            }
         }
         $allServers = Server::find()->asArray()->all();
         $servers = ArrayHelper::map($allServers, 'serverName', 'serverName');
@@ -162,7 +166,7 @@ class StreamController extends Controller{
                 }
                 $rows = ArrayHelper::getColumn($allStreams, function($element){
                     $now = time();
-                    return [$element['streamName'], 1, $element['source'], 1, $element['server'], $now, $now];
+                    return [$element['streamName'], 0, $element['source'], 1, $element['server'], $now, $now];
                 });
                     $db = Yii::$app->db;
                     $db->createCommand()->batchInsert('stream', $columns, $rows)->execute();

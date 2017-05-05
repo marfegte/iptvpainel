@@ -39,6 +39,8 @@ use app\models\StreamAccessLog;
 use app\models\NginxInfoSearch;
 use app\models\MysqlInfoSearch;
 use app\models\Timezone;
+use yii\web\HttpException;
+use app\models\Command;
 
 class MonitorController extends Controller
 {
@@ -118,6 +120,7 @@ class MonitorController extends Controller
         $mysqls = $this->getRealtimeMysqlStatus();
         $nginxes = $this->getRealtimeNginxStatus();
         $onlineClients = $this->getOnlineClients();
+        $filterServers = $this->getServersForDrop();
         $filter = [
             0 => 'DOWN',
             1 => 'UP'
@@ -128,6 +131,7 @@ class MonitorController extends Controller
             'mysqls' => $mysqls,
             'nginxes' => $nginxes,
             'onlineClients' => $onlineClients,
+            'filterServers' => $filterServers,
             'filter' => $filter,
         ]);
     }
@@ -199,24 +203,23 @@ class MonitorController extends Controller
     public function actionStreamsMonitor($serverName=null)
     {
         if($serverName===null){
-            $serverName = Server::find()->one()->serverName;
+            $server = Server::find()->one();
+        }else{
+            $server = Server::findOne($serverName);
         }
-        $model = new Server();
-        $model->serverName = $serverName;
-        $model->scenario = Server::SCENARIO_SELECT_STREAMS;
-        if($model->load(Yii::$app->request->post())){
-            return $this->redirect(['streams', 'serverName'=>$model->serverName, 'streams'=>implode(',', $model->streams)]);
+        $server->scenario = Server::SCENARIO_SELECT_STREAMS;
+        if($server->load(Yii::$app->request->post())){
+            return $this->redirect(['streams', 'serverName'=>$server->serverName, 'streams'=>implode(',', $server->streams)]);
         }
-        $streams = ArrayHelper::map($model->getStreams()->all(), 'streamName', 'streamName');
+        $streams = ArrayHelper::map($server->streams, 'streamName', 'streamName');
         $filterModel = new StreamSearch();
-        $dataProvider = $filterModel->searchOnSomeServer(Yii::$app->request->queryParams, $serverName);
+        $dataProvider = $filterModel->searchOnSomeServer(Yii::$app->request->queryParams, $server->serverName);
         return $this->render('streams-monitor',[
             'servers' => $this->getServersForDrop(),
-            'model' => $model,
+            'server' => $server,
             'streams' => $streams,
             'filterModel' => $filterModel,
             'dataProvider' => $dataProvider,
-            'serverName' => $serverName
         ]);
     }
     /**
@@ -630,8 +633,7 @@ class MonitorController extends Controller
      * @param string $serverName
      */
     public function actionServerDetail($serverName){
-        $model = new Server();
-        $model->serverName = $serverName;
+        $model = Server::findServerByName($serverName);
         return $this->render('server-detail',[
             'model' => $model,
             'servers' => $this->getServersForDrop()
@@ -905,16 +907,24 @@ class MonitorController extends Controller
      */
     public function actionStopStreaming($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(1, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                Yii::$app->db->createCommand()->update('stream', ['status' => 0], ['server'=>$serverName])->execute();
-                $session['result'] = 'Stop Streaming Successfully on '.$serverName;
+            $server = Server::findServerByName($serverName);
+            if($server->streamingStatus === 1){
+                $obj = $this->sendCommand(Command::STOP_IPTVSTREAMING, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    Yii::$app->db->createCommand()->update('stream', ['status' => 0], ['server'=>$serverName])->execute();
+                    Yii::$app->db->createCommand()->update('server', ['streamingStatus' => 0], ['serverName'=>$serverName])->execute();
+                    $session['result'] = 'Stop Streaming Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Stop Streaming on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
             }else{
-                $session['result'] = 'Failed to Stop Streaming on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't stop IPTVStreaming when it is down");
             }
-            return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+        }else{
+            throw new HttpException('400', "you can't stop IPTVStreaming when server is down");
         }
     }
     /**
@@ -924,16 +934,24 @@ class MonitorController extends Controller
      */
     public function actionStartStreaming($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(2, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                Yii::$app->db->createCommand()->update('stream', ['status' => 1], ['server'=>$serverName])->execute();
-                $session['result'] = 'Start Streaming Successfully on '.$serverName;
+            $server = Server::findServerByName($serverName);
+            if($server->streamingStatus === 0){
+                $obj = $this->sendCommand(Command::START_IPTVSTREAMING, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    Yii::$app->db->createCommand()->update('stream', ['status' => 1], ['server'=>$serverName])->execute();
+                    Yii::$app->db->createCommand()->update('server', ['streamingStatus' => 1], ['serverName'=>$serverName])->execute();
+                    $session['result'] = 'Start Streaming Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Start Streaming on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
             }else{
-                $session['result'] = 'Failed to Start Streaming on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't start IPTVStreaming when it is up");
             }
-            return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+        }else{
+            throw new HttpException('400', "you can't start IPTVStreaming when server is down");
         }
     }
     /**
@@ -943,16 +961,23 @@ class MonitorController extends Controller
      */
     public function actionRestartStreaming($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(3, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                Yii::$app->db->createCommand()->update('stream', ['status' => 1], ['server'=>$serverName])->execute();
-                $session['result'] = 'Restart Streaming Successfully on '.$serverName;
+            $server = Server::findServerByName($serverName);
+            if($server->streamingStatus === 1){
+                $obj = $this->sendCommand(Command::RESTART_IPTVSTREAMING, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    Yii::$app->db->createCommand()->update('stream', ['status' => 1], ['server'=>$serverName])->execute();
+                    $session['result'] = 'Restart Streaming Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Restart Streaming on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
             }else{
-                $session['result'] = 'Failed to Restart Streaming on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't restart IPTVStreaming when it is down");
             }
-            return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+        }else{
+            throw new HttpException('400', "you can't restart IPTVStreaming when server is down");
         }
     }
 
@@ -965,23 +990,30 @@ class MonitorController extends Controller
      */
     public function actionStopStream($streamName, $serverName, $source, $page){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(4, $serverName, $streamName, $source);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = Stream::findStreamByKey($streamName, $serverName);
-                $model->scenario = Stream::SCENARIO_CHANGE_STATUS;
-                $model->status = 0;
-                $model->save();
-                $session['result'] = 'Stop Stream '.$streamName.' on '.$serverName.' Successfully';
+            $stream = Stream::findStreamByKey($streamName, $serverName);
+            if($stream->status === 1){
+                $obj = $this->sendCommand(Command::STOP_STREAM, $serverName, $streamName, $source);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = Stream::findStreamByKey($streamName, $serverName);
+                    $model->scenario = Stream::SCENARIO_CHANGE_STATUS;
+                    $model->status = 0;
+                    $model->save();
+                    $session['result'] = 'Stop Stream '.$streamName.' on '.$serverName.' Successfully';
+                }else{
+                    $session['result'] = 'Failed to Stop Stream '.$streamName.' on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                if($page==='index'){
+                    return $this->redirect('index');
+                }else{
+                    return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+                }
             }else{
-                $session['result'] = 'Failed to Stop Stream '.$streamName.' on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't stop stream when stream is down");
             }
-            if($page==='index'){
-                return $this->redirect('index');
-            }else{
-                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
-            }
+        }else{
+            throw new HttpException('400', "you can't stop stream when server is down");
         }
     }
     /**
@@ -993,23 +1025,30 @@ class MonitorController extends Controller
      */
     public function actionStartStream($streamName, $serverName, $source, $page){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(5, $serverName, $streamName, $source);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = Stream::findStreamByKey($streamName, $serverName);
-                $model->scenario = Stream::SCENARIO_CHANGE_STATUS;
-                $model->status = 1;
-                $model->save();
-                $session['result'] = 'Start Stream '.$streamName.' on '.$serverName.' Successfully';
+            $stream = Stream::findStreamByKey($streamName, $serverName);
+            if($stream->status === 0){
+                $obj = $this->sendCommand(Command::START_STREAM, $serverName, $streamName, $source);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = Stream::findStreamByKey($streamName, $serverName);
+                    $model->scenario = Stream::SCENARIO_CHANGE_STATUS;
+                    $model->status = 1;
+                    $model->save();
+                    $session['result'] = 'Start Stream '.$streamName.' on '.$serverName.' Successfully';
+                }else{
+                    $session['result'] = 'Failed to Start Stream '.$streamName.' on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                if($page==='index'){
+                    return $this->redirect('index');
+                }else{
+                    return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+                }
             }else{
-                $session['result'] = 'Failed to Start Stream '.$streamName.' on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't start stream when stream is up");
             }
-            if($page==='index'){
-                return $this->redirect('index');
-            }else{
-                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
-            }
+        }else{
+            throw new HttpException('400', "you can't start stream when server is down");
         }
     }
     /**
@@ -1021,40 +1060,80 @@ class MonitorController extends Controller
      */
     public function actionRestartStream($streamName, $serverName, $source, $page){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(6, $serverName, $streamName, $source);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                'Restart Stream '.$streamName.' on '.$serverName.' Successfully';
+            $stream = Stream::findStreamByKey($streamName, $serverName);
+            if($stream->status === 1){
+                $obj = $this->sendCommand(Command::RESTART_STREAM, $serverName, $streamName, $source);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    'Restart Stream '.$streamName.' on '.$serverName.' Successfully';
+                }else{
+                    $session['result'] = 'Failed to Restart Stream '.$streamName.' on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                if($page==='index'){
+                    return $this->redirect('index');
+                }else{
+                    return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
+                }
             }else{
-                $session['result'] = 'Failed to Restart Stream '.$streamName.' on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't restart stream when stream is down");
             }
-            if($page==='index'){
-                return $this->redirect('index');
-            }else{
-                return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
-            }
+        }else{
+            throw new HttpException('400', "you can't restart stream when server is down");
         }
     }
+    
+    /**
+     * 在线播放串流
+     * @param string $streamName
+     * @param string $serverName
+     * @throws HttpException
+     * @return string
+     */
+    public function actionPlayStream($streamName, $serverName){
+        if($this->getServerStatus($serverName)){
+            $model = Stream::findStreamByKey($streamName, $serverName);
+            if($model->status === 1){
+                $server = Server::findServerByName($serverName);
+                $url = $server->serverIp . "/hls/" . $streamName . "/" . $streamName . ".m3u8";
+                return $this->render('stream-play', [
+                    'model' => $model,
+                    'url' => $url
+                ]);
+            }else{
+                throw new HttpException('400', "you can't play stream when stream is down");
+            }
+        }else{
+            throw new HttpException('400', "you can't play stream when server is down");
+        }
+    }
+    
     /**
      * stop Mysql
      * @param string $serverName
      */
     public function actionStopMysql($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(7, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = MySql::findMysqlByName($serverName);
-                $model->scenario = MySql::SCENARIO_CHANGE_STATUS;
-                $model->status = 0;
-                $model->save();
-                $session['result'] = 'Stop MySQL Successfully on '.$serverName;
+            $mysql = Mysql::findMysqlByName($serverName);
+            if($mysql->status === 1){
+                $obj = $this->sendCommand(Command::STOP_MYSQL, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = MySql::findMysqlByName($serverName);
+                    $model->scenario = MySql::SCENARIO_CHANGE_STATUS;
+                    $model->status = 0;
+                    $model->save();
+                    $session['result'] = 'Stop MySQL Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Stop MySQL on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Stop MySQL on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't stop mysql when it is down");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't stop mysql when server is down");
         }
     }
     /**
@@ -1063,19 +1142,26 @@ class MonitorController extends Controller
      */
     public function actionStartMysql($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(8, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = MySql::findMysqlByName($serverName);
-                $model->scenario = MySql::SCENARIO_CHANGE_STATUS;
-                $model->status = 1;
-                $model->save();
-                $session['result'] = 'Start MySQL Successfully on '.$serverName;
+            $mysql = Mysql::findMysqlByName($serverName);
+            if($mysql->status === 0){
+                $obj = $this->sendCommand(Command::START_MYSQL, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = MySql::findMysqlByName($serverName);
+                    $model->scenario = MySql::SCENARIO_CHANGE_STATUS;
+                    $model->status = 1;
+                    $model->save();
+                    $session['result'] = 'Start MySQL Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Start MySQL on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Start MySQL on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't start mysql when it is up");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't start mysql when server is down");
         }
     }
     /**
@@ -1084,15 +1170,22 @@ class MonitorController extends Controller
      */
     public function actionRestartMysql($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(9, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $session['result'] = 'Restart MySQL Successfully on '.$serverName;
+            $mysql = Mysql::findMysqlByName($serverName);
+            if($mysql->status === 1){
+                $obj = $this->sendCommand(Command::RESTART_MYSQL, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $session['result'] = 'Restart MySQL Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Restart MySQL on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Restart MySQL on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't restart mysql when it is down");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't restart mysql when server is down");
         }
     }
 
@@ -1102,19 +1195,26 @@ class MonitorController extends Controller
      */
     public function actionStopNginx($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(10, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = Nginx::findNginxByName($serverName);
-                $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
-                $model->status = 0;
-                $model->save();
-                $session['result'] = 'Stop Nginx Successfully on '.$serverName;
+            $nginx = Nginx::findNginxByName($serverName);
+            if($nginx->status === 1){
+                $obj = $this->sendCommand(Command::STOP_NGINX, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = Nginx::findNginxByName($serverName);
+                    $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
+                    $model->status = 0;
+                    $model->save();
+                    $session['result'] = 'Stop Nginx Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Stop Nginx on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Stop Nginx on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't stop nginx when it is down");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't stop nginx when server is down");
         }
     }
     /**
@@ -1123,19 +1223,26 @@ class MonitorController extends Controller
      */
     public function actionStartNginx($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(11, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = Nginx::findNginxByName($serverName);
-                $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
-                $model->status = 1;
-                $model->save();
-                $session['result'] = 'Start Nginx Successfully on '.$serverName;
+            $nginx = Nginx::findNginxByName($serverName);
+            if($nginx->status === 0){
+                $obj = $this->sendCommand(Command::START_NGINX, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = Nginx::findNginxByName($serverName);
+                    $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
+                    $model->status = 1;
+                    $model->save();
+                    $session['result'] = 'Start Nginx Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Start Nginx on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Start Nginx on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't start nginx when it is up");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't start nginx when server is down");
         }
     }
     /**
@@ -1144,19 +1251,26 @@ class MonitorController extends Controller
      */
     public function actionRestartNginx($serverName){
         if($this->getServerStatus($serverName)){
-            $obj = $this->sendCommand(12, $serverName);
-            $session = Yii::$app->session;
-            if($obj->status===1){
-                $model = Nginx::findNginxByName($serverName);
-                $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
-                $model->status = 1;
-                $model->save();
-                $session['result'] = 'Restart Nginx Successfully on '.$serverName;
+            $nginx = Nginx::findNginxByName($serverName);
+            if($nginx->status === 1){
+                $obj = $this->sendCommand(Command::RESTART_NGINX, $serverName);
+                $session = Yii::$app->session;
+                if($obj->status===1){
+                    $model = Nginx::findNginxByName($serverName);
+                    $model->scenario = Nginx::SCENARIO_CHANGE_STATUS;
+                    $model->status = 1;
+                    $model->save();
+                    $session['result'] = 'Restart Nginx Successfully on '.$serverName;
+                }else{
+                    $session['result'] = 'Failed to Restart Nginx on '.$serverName;
+                    $session['description'] = $obj->description;
+                }
+                return $this->redirect('index');
             }else{
-                $session['result'] = 'Failed to Restart Nginx on '.$serverName;
-                $session['description'] = $obj->description;
+                throw new HttpException('400', "you can't restart nginx when it is down");
             }
-            return $this->redirect('index');
+        }else{
+            throw new HttpException('400', "you can't restart nginx when server is down");
         }
     }
     
@@ -1826,37 +1940,43 @@ class MonitorController extends Controller
      */
     private function sendCommand($commandId, $serverName, $streamName=null, $source=null){
         $array = [
-            'action' => 0,
+            'action' => Command::REQUEST,
             'command' => $commandId,
             'executor' => Yii::$app->user->identity->userName
         ];
-        if($commandId===4 || $commandId===5 || $commandId===6){
+        if($commandId===Command::STOP_STREAM || $commandId===Command::START_STREAM || $commandId===Command::RESTART_STREAM){
             $array['streamName'] = $streamName;
             $array['source'] = $source;
         }
-//         $server = Server::findServerByName($serverName);
-//         $address = $server->serverIp;
-        $address = '10.134.97.40';
-        $port = 9000;
-        $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_connect($socket, $address, $port);
-        $in = json_encode($array);
-        socket_write($socket, $in, strlen($in));
-        $out = socket_read($socket, 8192);
-        $obj = json_decode($out);
-        if($obj->status===0){
-            socket_close($socket);
-        }else{
-            $close = [
-                'action' => 0,
-                'command' => 13,
-                'executor' => Yii::$app->user->identity->userName
-            ];
-            $close = json_encode($close);
-            socket_write($socket, $close, strlen($close));
-            socket_close($socket);
+        $server = Server::findServerByName($serverName);
+        $address = $server->serverIp;
+        //$address = '10.134.97.40';
+        $port = 6666;
+        try{
+            $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+            socket_connect($socket, $address, $port);
+            $in = json_encode($array);
+            socket_write($socket, $in, strlen($in));
+            $out = socket_read($socket, 8192);
+            $obj = json_decode($out);
+            if($obj->status===0){
+                socket_shutdown($socket, 2);
+                socket_close($socket);
+            }else{
+                $close = [
+                    'action' => Command::REQUEST,
+                    'command' => Command::QUIT,
+                    'executor' => Yii::$app->user->identity->userName
+                ];
+                $close = json_encode($close);
+                socket_write($socket, $close, strlen($close));
+                socket_shutdown($socket, 2);
+                socket_close($socket);
+            }
+            return $obj;
+        }catch(\Exception $e){
+            throw new HttpException(400, $e->getMessage());
         }
-        return $obj;
     }
     
     private function getServerStatus($serverName){

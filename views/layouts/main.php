@@ -75,12 +75,12 @@ AppAsset::register($this);
                         	    $this->endCache();
                         	}
                     	?>
-                        <li>
+                        <!-- <li>
                             <a class="text-center" href="#">
                                 <strong>Read All Messages</strong>
                                 <i class="fa fa-angle-right"></i>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </li>
                 <li class="dropdown">

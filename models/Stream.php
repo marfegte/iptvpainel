@@ -4,7 +4,6 @@ namespace app\models;
 use yii\db\ActiveRecord;
 use yii\web\NotFoundHttpException;
 use yii\behaviors\TimestampBehavior;
-use yii\db\Expression;
 
 class Stream extends ActiveRecord{
     public $importFile;

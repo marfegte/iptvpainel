@@ -84,4 +84,13 @@ return array (
       '@kartik/daterange' => $vendorDir . '/kartik-v/yii2-date-range',
     ),
   ),
+  'wbraganca/yii2-videojs-widget' => 
+  array (
+    'name' => 'wbraganca/yii2-videojs-widget',
+    'version' => '1.0.0.0',
+    'alias' => 
+    array (
+      '@wbraganca' => $vendorDir . '/wbraganca/yii2-videojs-widget',
+    ),
+  ),
 );

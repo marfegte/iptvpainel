@@ -23,7 +23,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             'serverIp',
                             [
                                 'attribute' => 'status',
-                                'value' => $model->status ? 'up' : 'down',
+                                'format' => 'html',
+                                'value' => $model->status ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>',
+                            ],
+                            [
+                                'attribute' => 'streamingStatus',
+                                'format' => 'html',
+                                'value' => $model->streamingStatus ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>',
                             ],
                             'operatingSystem',
                             [

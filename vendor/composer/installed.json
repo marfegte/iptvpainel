@@ -1084,5 +1084,54 @@
             "widget",
             "yii2"
         ]
+    },
+    {
+        "name": "wbraganca/yii2-videojs-widget",
+        "version": "1.0.0",
+        "version_normalized": "1.0.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/wbraganca/yii2-videojs-widget.git",
+            "reference": "ae1b1a9fc53f2697c9faeebd5c685cf521776fee"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/wbraganca/yii2-videojs-widget/zipball/ae1b1a9fc53f2697c9faeebd5c685cf521776fee",
+            "reference": "ae1b1a9fc53f2697c9faeebd5c685cf521776fee",
+            "shasum": ""
+        },
+        "require": {
+            "yiisoft/yii2": "*"
+        },
+        "time": "2014-06-24T14:44:19+00:00",
+        "type": "yii2-extension",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "wbraganca\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD-3-Clause"
+        ],
+        "authors": [
+            {
+                "name": "Wanderson Bragança",
+                "email": "wanderson.wbc@gmail.com"
+            }
+        ],
+        "description": "The yii2-videojs-widget is a Yii 2 wrapper for the [video.js](http://www.videojs.com/). A JavaScript and CSS library that makes it easier to work with and build on HTML5 video. This is also known as an HTML5 Video Player.",
+        "keywords": [
+            "extension",
+            "html5 video",
+            "player",
+            "video",
+            "videojs",
+            "yii2",
+            "yii2-extension",
+            "yii2-videojs",
+            "yii2-videojs-widget"
+        ]
     }
 ]

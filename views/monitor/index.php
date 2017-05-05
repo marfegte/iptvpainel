@@ -43,6 +43,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'filter' => $filter,
                             ],
                             'serverName',
+                            [
+                                'attribute' => 'streamingStatus',
+                                'format' => 'html',
+                                'value' => function($model){
+                                    if($model->status == 0) return '<i class="fa fa-circle" style="color:#f0ad4e;"></i>';
+                                        return $model->streamingStatus == 1 ? '<i class="fa fa-circle" style="color:#5cb85c;"></i>' : '<i class="fa fa-circle" style="color:#d9534f;"></i>';
+                                    },
+                                'filter' => $filter,
+                            ],
                             'serverIp',
                             'operatingSystem',
                             [
@@ -125,6 +134,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function($model){
                                     return Html::a($model->server, ['monitor/server-detail', 'serverName' => $model->server]);
                                 },
+                                'filter' => $filterServers,
                             ],
                             [
                                 'class' => 'yii\grid\ActionColumn',
@@ -163,7 +173,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     if($model->serverInfo->status !== 0){
                                         if($model->status == 0) return '<span class="fa fa-play-circle" style="color:gray;"></span>';
                                         return Html::a('<span class="fa fa-play-circle"></span>',
-                                        ['play', 'streamName' => $key],
+                                        ['play-stream', 'streamName' => $model->streamName, 'serverName' => $model->server],
                                         ['title' => 'Delete',]);
                                     }else{
                                         return Html::a('<i class="fa fa-play-circle" style="color:gray;"></i>');
