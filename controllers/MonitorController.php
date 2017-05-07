@@ -1960,7 +1960,7 @@ class MonitorController extends Controller
             $out = socket_read($socket, 8192);
             $obj = json_decode($out);
             if($obj->status===0){
-                socket_shutdown($socket, 2);
+                //socket_shutdown($socket, 2);
                 socket_close($socket);
             }else{
                 $close = [
@@ -1970,7 +1970,7 @@ class MonitorController extends Controller
                 ];
                 $close = json_encode($close);
                 socket_write($socket, $close, strlen($close));
-                socket_shutdown($socket, 2);
+                //socket_shutdown($socket, 2);
                 socket_close($socket);
             }
             return $obj;
