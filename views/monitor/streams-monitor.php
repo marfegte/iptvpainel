@@ -13,7 +13,7 @@ $status = [
 ];
 
 ?>
-<?=Html::dropDownList('serverName', $server, $servers, ['id'=>'server-servername','class' => 'form-control','style'=>'width:100px;float:left']);?>
+<?=Html::dropDownList('serverName', $server->serverName, $servers, ['id'=>'server-servername','class' => 'form-control','style'=>'width:100px;float:left']);?>
 &nbsp;&nbsp;&nbsp;
 <span class="label label-info" style="font-size: 120%;">Server:</span> 
 <?php 
@@ -216,8 +216,9 @@ echo GridView::widget([
                     if ($model->status == 0)
                         return '<span class="fa fa-play-circle" style="color:gray;"></span>';
                     return Html::a('<span class="fa fa-play-circle"></span>', [
-                        'play',
-                        'streamName' => $key
+                        'play-stream',
+                        'streamName' => $model->streamName, 
+                        'serverName' => $model->server
                     ], [
                         'title' => 'Delete'
                     ]);

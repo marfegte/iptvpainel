@@ -1005,7 +1005,7 @@ class MonitorController extends Controller
                     $session['description'] = $obj->description;
                 }
                 if($page==='index'){
-                    return $this->redirect('index');
+                    return $this->redirect(['index']);
                 }else{
                     return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
                 }
@@ -1040,7 +1040,7 @@ class MonitorController extends Controller
                     $session['description'] = $obj->description;
                 }
                 if($page==='index'){
-                    return $this->redirect('index');
+                    return $this->redirect(['index']);
                 }else{
                     return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
                 }
@@ -1071,7 +1071,7 @@ class MonitorController extends Controller
                     $session['description'] = $obj->description;
                 }
                 if($page==='index'){
-                    return $this->redirect('index');
+                    return $this->redirect(['index']);
                 }else{
                     return $this->redirect(['streams-monitor', 'serverName'=>$serverName]);
                 }
@@ -1095,7 +1095,7 @@ class MonitorController extends Controller
             $model = Stream::findStreamByKey($streamName, $serverName);
             if($model->status === 1){
                 $server = Server::findServerByName($serverName);
-                $url = $server->serverIp . "/hls/" . $streamName . "/" . $streamName . ".m3u8";
+                $url = 'http://' . $server->serverIp . "/hls/" . $streamName . "/" . $streamName . ".m3u8";
                 return $this->render('stream-play', [
                     'model' => $model,
                     'url' => $url
@@ -1128,7 +1128,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Stop MySQL on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't stop mysql when it is down");
             }
@@ -1156,7 +1156,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Start MySQL on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't start mysql when it is up");
             }
@@ -1180,7 +1180,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Restart MySQL on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't restart mysql when it is down");
             }
@@ -1209,7 +1209,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Stop Nginx on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't stop nginx when it is down");
             }
@@ -1237,7 +1237,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Start Nginx on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't start nginx when it is up");
             }
@@ -1265,7 +1265,7 @@ class MonitorController extends Controller
                     $session['result'] = 'Failed to Restart Nginx on '.$serverName;
                     $session['description'] = $obj->description;
                 }
-                return $this->redirect('index');
+                return $this->redirect(['index']);
             }else{
                 throw new HttpException('400', "you can't restart nginx when it is down");
             }

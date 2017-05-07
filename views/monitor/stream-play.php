@@ -54,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'tags' => [
             'source' => [
-                ['src' => 'http://ivi.bupt.edu.cn/hls/cctv1hd.m3u8', 'type' => 'application/x-mpegURL']
+                ['src' => $url, 'type' => 'application/x-mpegURL']
             ]
         ]
     ]);
