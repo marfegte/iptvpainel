@@ -149,14 +149,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     },
                                     'switch' => function($url, $model, $key){
                                     if($model->serverInfo->status !== 0){
-                                        if($model->status == 0) return Html::a('<i class="fa fa-power-off" style="color:#5cb85c;"></i>',
+                                        if($model->status == 0) return Html::a('<i class="fa fa-toggle-off"></i>',
                                             ['start-stream', 'streamName' => $model->streamName, 'serverName' => $model->server, 'source' => $model->source, 'page' => 'index'],
                                             ['title' => 'Start']);
-                                        return Html::a('<i class="fa fa-power-off" style="color:#d9534f;"></i>',
+                                        return Html::a('<i class="fa fa-toggle-on"></i>',
                                             ['stop-stream', 'streamName' => $model->streamName, 'serverName' => $model->server, 'source' => $model->source, 'page' => 'index'],
                                             ['title' => 'Stop']);
                                     }else{
-                                        return Html::a('<i class="fa fa-power-off" style="color:gray;"></i>');
+                                        return Html::a('<i class="fa fa-toggle-off" style="color:gray;"></i>');
                                     }
                                     },
                                     'restart' => function($url, $model, $key){
@@ -174,7 +174,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         if($model->status == 0) return '<span class="fa fa-play-circle" style="color:gray;"></span>';
                                         return Html::a('<span class="fa fa-play-circle"></span>',
                                         ['play-stream', 'streamName' => $model->streamName, 'serverName' => $model->server],
-                                        ['title' => 'Delete',]);
+                                        ['title' => 'Play',]);
                                     }else{
                                         return Html::a('<i class="fa fa-play-circle" style="color:gray;"></i>');
                                     }
@@ -250,14 +250,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     },
                                     'switch' => function($url, $model, $key){
                                     if($model->serverInfo->status !== 0){
-                                        if($model->status == 0) return Html::a('<i class="fa fa-power-off" style="color:#5cb85c;"></i>',
+                                        if($model->status == 0) return Html::a('<i class="fa fa-toggle-off"></i>',
                                             ['start-mysql', 'serverName' => $key],
                                             ['title' => 'Start']);
-                                        return Html::a('<i class="fa fa-power-off" style="color:#d9534f;"></i>',
+                                        return Html::a('<i class="fa fa-toggle-on"></i>',
                                             ['stop-mysql', 'serverName' => $key],
                                             ['title' => 'Stop']);
                                     }else{
-                                        return Html::a('<i class="fa fa-power-off" style="color:gray;"></i>');
+                                        return Html::a('<i class="fa fa-toggle-off" style="color:gray;"></i>');
                                     }
                                     },
                                     'restart' => function($url, $model, $key){
@@ -339,14 +339,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     },
                                     'switch' => function($url, $model, $key){
                                     if($model->serverInfo->status !== 0){
-                                        if($model->status == 0) return Html::a('<i class="fa fa-power-off" style="color:#5cb85c;"></i>',
+                                        if($model->status == 0) return Html::a('<i class="fa fa-toggle-off"></i>',
                                             ['start-nginx', 'serverName' => $key],
                                             ['title' => 'Start']);
-                                        return Html::a('<i class="fa fa-power-off" style="color:#d9534f;"></i>',
+                                        return Html::a('<i class="fa fa-toggle-on"></i>',
                                             ['stop-nginx', 'serverName' => $key],
                                             ['title' => 'Stop']);
                                     }else{
-                                        return Html::a('<i class="fa fa-power-off" style="color:gray;"></i>');
+                                        return Html::a('<i class="fa fa-toggle-off" style="color:gray;"></i>');
                                     }
                                     },
                                     'restart' => function($url, $model, $key){

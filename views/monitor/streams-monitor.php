@@ -184,18 +184,18 @@ echo GridView::widget([
                 'switch' => function ($url, $model, $key) {
                 if($model->serverInfo->status !== 0){
                     if ($model->status == 0)
-                        return Html::a('<i class="fa fa-power-off" style="color:#5cb85c;"></i>', [
+                        return Html::a('<i class="fa fa-toggle-off"></i>', [
                             'start-stream', 'streamName' => $key, 'serverName' => $model->server, 'source' => $model->source, 'page' => 'streams-monitor'
                         ], [
                             'title' => 'Start'
                         ]);
-                    return Html::a('<i class="fa fa-power-off" style="color:#d9534f;"></i>', [
+                    return Html::a('<i class="fa fa-toggle-on"></i>', [
                         'stop-stream', 'streamName' => $key, 'serverName' => $model->server, 'source' => $model->source, 'page' => 'streams-monitor'
                     ], [
                         'title' => 'Stop'
                     ]);
                 }else{
-                    return Html::a('<i class="fa fa-power-off" style="color:gray;"></i>');
+                    return Html::a('<i class="fa fa-toggle-off" style="color:gray;"></i>');
                 }
                 },
                 'restart' => function ($url, $model, $key) {
@@ -220,7 +220,7 @@ echo GridView::widget([
                         'streamName' => $model->streamName, 
                         'serverName' => $model->server
                     ], [
-                        'title' => 'Delete'
+                        'title' => 'Play'
                     ]);
                 }else{
                     return Html::a('<i class="fa fa-play-circle" style="color:gray;"></i>');
