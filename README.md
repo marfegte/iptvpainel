@@ -6,7 +6,8 @@
 
 ## Screenshots
 * Login page
-![login](https://github.com/AlexanderJLiu/IPTVM/raw/master/images/login.png)
+
+![login](https://github.com/AlexanderJLiu/IPTVM/blob/master/raw/master/images/login.png)
 
 ## Note
 if you stream youself using nginx, for playing hls file on this system, you should configure your nginx server :
