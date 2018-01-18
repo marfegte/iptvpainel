@@ -4,6 +4,31 @@
 
 **IPTVM** is short for IPTV Content Management System based on **yii** framework, which not only can manage basic IPTV information of Set-Top Box including accounts, products, etc. , but also can monitor and control the  remote servers where streams deployed on. 
 
+## Installation
+
+IPTVM is available on GitHub, you can clone and install it as follows:
+
+**Windows**
+
+* $ git clone https://github.com/AlexanderJLiu/IPTVM.git
+* Install [WAMPServer](http://www.wampserver.com/en/) or [XAMPP](https://www.apachefriends.org/index.html)
+* Copy IPTVM to the www/ directory of WAMPServer's installation path
+* Use phpmyadmin or other MySQL GUI tools to import database/iptvm.sql
+* Samples are in database/examples.sql file which contains admin information
+* You should config the config/db.php whose information should equal to your local db
+* Access http://localhost/IPTVM/web/index.php for login
+* Default username is admin and password is admin123
+
+**Linux**
+
+* $ git clone https://github.com/AlexanderJLiu/IPTVM.git
+* Install Apache, PHP and its extensions e.g. php-mysql etc, MySQL
+* Copy IPTVM to /var/www/html
+* Start Apache and MySQL, import the sql files
+* You should config the config/db.php whose information should equal to your local db
+* Access http://localhost/IPTVM/web/index.php for login
+* Default username is admin and password is admin123
+
 ## Screenshots
 * **Login page**
 
