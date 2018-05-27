@@ -31,7 +31,7 @@ IPTVM is available on GitHub, you can clone and install it as follows:
 
 ## Monitor Servers & Streams
 
-If you want to monitor your own servers and streams, and get the **CPU** and **RAM** info of them, you should add server by menu  **IPTV Moinitor->Monitor Configuration->Monitored Servers** first. And the streams also need to be imported to db by yourself(**IPTV Moinitor->Monitor Configuration->Monitored Streams**). Then, you should deploy [IPTVAgent](https://github.com/AlexanderJLiu/IPTVAgent) which can upload the realtime info to db on your server, and use [IPTVStreaming](https://github.com/AlexanderJLiu/IPTVStreaming) to stream your sources.
+If you want to monitor your own servers and streams, and get the **CPU** and **RAM** info of them, you should add your servers by menu  **IPTV Moinitor->Monitor Configuration->Monitored Servers** first. And the streams also need to be imported to db by yourself(**IPTV Moinitor->Monitor Configuration->Monitored Streams**). Then, you should deploy [IPTVAgent](https://github.com/AlexanderJLiu/IPTVAgent) which can upload the realtime info to db on your server, and use [IPTVStreaming](https://github.com/AlexanderJLiu/IPTVStreaming) to stream your sources.
 
 ## Screenshots
 * **Login page**
